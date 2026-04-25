@@ -1,5 +1,5 @@
 [project]
-name = "template-py"
+name = "forge-overlay"
 version = "0.1.0"
 description = "A Python project template with modern tooling."
 readme = "README.md"
@@ -11,28 +11,37 @@ authors = [
 ]
 
 dependencies = [
-  "pydantic>=2.12.5",
+  "starlette>=0.46",
+  "sse-starlette>=2.0",
+  "httpx>=0.28",
+  "uvicorn[standard]>=0.34",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.0",
-  "pytest-cov>=4.1",
+  "pytest>=8.0",
+  "pytest-asyncio>=0.26",
+  "pytest-cov>=6.0",
+  "httpx>=0.28",
+  "anyio>=4.9",
   "mypy>=1.10",
   "ruff>=0.5.0",
 ]
 
+[project.scripts]
+forge-overlay = "forge_overlay.main:main"
+
 #[project.urls]
-#homepage = "https://github.com/Bullish-Design/template-py"
-#repository = "https://github.com/Bullish-Design/template-py.git"
+#homepage = "https://github.com/Bullish-Design/forge-overlay"
+#repository = "https://github.com/Bullish-Design/forge-overlay.git"
 
 [build-system]
 requires = ["hatchling>=1.18"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# Tell hatch which package to ship (your code lives in src/template_py)
-packages = ["src/template_py"]
+# Tell hatch which package to ship (your code lives in src/forge_overlay)
+packages = ["src/forge_overlay"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -48,12 +57,13 @@ include = [
 # Keep the default behavior; this section is here so you can extend it later if needed.
 
 [tool.pytest.ini_options]
-addopts = "-q --cov=embeddify --cov-report=term-missing"
+asyncio_mode = "auto"
+addopts = "-q --cov=forge_overlay --cov-report=term-missing"
 testpaths = ["tests"]
 
 [tool.mypy]
 python_version = "3.13"
-packages = ["src/template_py"]
+packages = ["src/forge_overlay"]
 strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
@@ -82,4 +92,3 @@ ignore = []
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
-
