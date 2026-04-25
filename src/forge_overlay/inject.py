@@ -2,12 +2,8 @@ from __future__ import annotations
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-
 # The snippet injected before </head> in every HTML response.
-SNIPPET = (
-    '<link rel="stylesheet" href="/ops/ops.css">\n'
-    '<script type="module" src="/ops/ops.js"></script>\n'
-)
+SNIPPET = '<link rel="stylesheet" href="/ops/ops.css">\n<script type="module" src="/ops/ops.js"></script>\n'
 
 
 class InjectMiddleware:
@@ -50,9 +46,7 @@ class InjectMiddleware:
                     if "text/html" in content_type:
                         full_body = _inject(full_body)
                         # Update content-length
-                        new_headers = [
-                            (k, v) for k, v in start_headers if k.lower() != b"content-length"
-                        ]
+                        new_headers = [(k, v) for k, v in start_headers if k.lower() != b"content-length"]
                         new_headers.append((b"content-length", str(len(full_body)).encode()))
                         initial_message["headers"] = new_headers
 

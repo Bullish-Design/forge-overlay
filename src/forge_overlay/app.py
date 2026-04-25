@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncGenerator
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
@@ -9,6 +11,7 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import FileResponse, RedirectResponse, Response
 from starlette.routing import Route
+from starlette.types import ASGIApp
 
 from forge_overlay.config import Config
 from forge_overlay.events import EventBroker
@@ -17,7 +20,7 @@ from forge_overlay.proxy import proxy_request
 from forge_overlay.static_handler import build_404, build_response, resolve_file
 
 
-def create_app(config: Config) -> Starlette:
+def create_app(config: Config) -> ASGIApp:
     """Build and return the forge-overlay ASGI application."""
     broker = EventBroker()
     http_client = httpx.AsyncClient()
@@ -30,7 +33,7 @@ def create_app(config: Config) -> Starlette:
     async def sse_events(_request: Request) -> EventSourceResponse:
         """GET /ops/events - SSE stream for rebuild notifications."""
 
-        async def event_generator():
+        async def event_generator() -> AsyncGenerator[dict[str, str]]:
             async for data in broker.subscribe():
                 yield {"data": data}
 
@@ -82,7 +85,7 @@ def create_app(config: Config) -> Starlette:
     ]
 
     @asynccontextmanager
-    async def lifespan(_app: Starlette):
+    async def lifespan(_app: Starlette) -> AsyncIterator[None]:
         try:
             yield
         finally:

@@ -5,12 +5,12 @@ from pathlib import Path
 
 from starlette.responses import FileResponse, Response
 
-
 # Resolution order (matches kiln dev-server behavior):
 #   1. Exact file match
 #   2. <path>.html
 #   3. <path>/index.html
 #   4. 404.html fallback (if present)
+
 
 def resolve_file(site_dir: Path, url_path: str) -> Path | None:
     """Resolve a URL path to a file on disk. Returns None if not found."""

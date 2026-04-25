@@ -15,7 +15,7 @@ class EventBroker:
         for queue in self._subscribers:
             queue.put_nowait(data)
 
-    async def subscribe(self) -> AsyncGenerator[str, None]:
+    async def subscribe(self) -> AsyncGenerator[str]:
         """Yield events as they arrive. Use as `async for event in broker.subscribe()`."""
         queue: asyncio.Queue[str] = asyncio.Queue()
         self._subscribers.add(queue)
