@@ -15,6 +15,7 @@ dependencies = [
   "sse-starlette>=2.0",
   "httpx>=0.28",
   "uvicorn[standard]>=0.34",
+  "typer>=0.12",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +31,9 @@ dev = [
 
 [project.scripts]
 forge-overlay = "forge_overlay.main:main"
+forge-demo = "forge_overlay._scripts:run_demo"
+forge-generate = "forge_overlay._scripts:generate_demo"
+forge-clean = "forge_overlay._scripts:clean_demo"
 
 #[project.urls]
 #homepage = "https://github.com/Bullish-Design/forge-overlay"
@@ -55,6 +59,11 @@ include = [
 
 [tool.uv]
 # Keep the default behavior; this section is here so you can extend it later if needed.
+
+[tool.forge-overlay.scripts]
+demo = "demo/scripts/run-demo.sh"
+generate = "demo/scripts/generate-demo.sh"
+clean = "demo/scripts/clean-demo.sh"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

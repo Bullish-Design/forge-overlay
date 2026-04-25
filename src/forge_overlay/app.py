@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
