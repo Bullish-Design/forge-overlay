@@ -1,16 +1,16 @@
-session_name: Template-Py
+session_name: forge-overlay
 windows:
-  - window_name: Template-Py
+  - window_name: forge-overlay
     layout: main-vertical
     options:
       main-pane-width: 20%
     panes:
       - shell_command:
-          - cd ~/Documents/Notes/Projects/template-py
+          - cd ~/Documents/Projects/forge-overlay
           # - nvim Notes.md ToDo.md
           - open-project
       - shell_command:
           - tmux resizep -y 85%
-          - filelist-open "startup_files.txt" template-py
+          - filelist-open "startup_files.txt" forge-overlay
         focus: true
       - clear
