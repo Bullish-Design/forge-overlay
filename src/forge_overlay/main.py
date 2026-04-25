@@ -1,59 +1,79 @@
 from __future__ import annotations
 
-import argparse
-import os
 from pathlib import Path
+from typing import Annotated
 
+import typer
 import uvicorn
 
 from forge_overlay.app import create_app
 from forge_overlay.config import Config
 
+app = typer.Typer(
+    add_completion=False,
+    invoke_without_command=True,
+    no_args_is_help=False,
+)
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="forge-overlay development server")
-    parser.add_argument(
-        "--site-dir",
-        type=Path,
-        default=os.environ.get("FORGE_SITE_DIR", "public"),
-        help="Path to site output directory (default: public)",
-    )
-    parser.add_argument(
-        "--overlay-dir",
-        type=Path,
-        default=os.environ.get("FORGE_OVERLAY_DIR", "overlay"),
-        help="Path to overlay assets directory (default: overlay)",
-    )
-    parser.add_argument(
-        "--api-upstream",
-        type=str,
-        default=os.environ.get("FORGE_API_UPSTREAM", "http://127.0.0.1:3000"),
-        help="Upstream URL for /api/* proxy (default: http://127.0.0.1:3000)",
-    )
-    parser.add_argument(
-        "--host",
-        type=str,
-        default=os.environ.get("FORGE_HOST", "127.0.0.1"),
-        help="Bind host (default: 127.0.0.1)",
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=int(os.environ.get("FORGE_PORT", "8080")),
-        help="Bind port (default: 8080)",
-    )
-    args = parser.parse_args()
+@app.callback()
+def serve(
+    site_dir: Annotated[
+        Path,
+        typer.Option(
+            "--site-dir",
+            envvar="FORGE_SITE_DIR",
+            help="Path to site output directory (default: public)",
+        ),
+    ] = Path("public"),
+    overlay_dir: Annotated[
+        Path,
+        typer.Option(
+            "--overlay-dir",
+            envvar="FORGE_OVERLAY_DIR",
+            help="Path to overlay assets directory (default: overlay)",
+        ),
+    ] = Path("overlay"),
+    api_upstream: Annotated[
+        str,
+        typer.Option(
+            "--api-upstream",
+            envvar="FORGE_API_UPSTREAM",
+            help="Upstream URL for /api/* proxy (default: http://127.0.0.1:3000)",
+        ),
+    ] = "http://127.0.0.1:3000",
+    host: Annotated[
+        str,
+        typer.Option(
+            "--host",
+            envvar="FORGE_HOST",
+            help="Bind host (default: 127.0.0.1)",
+        ),
+    ] = "127.0.0.1",
+    port: Annotated[
+        int,
+        typer.Option(
+            "--port",
+            envvar="FORGE_PORT",
+            help="Bind port (default: 8080)",
+        ),
+    ] = 8080,
+) -> None:
+    """Run the forge-overlay development server."""
 
     config = Config(
-        site_dir=Path(args.site_dir),
-        overlay_dir=Path(args.overlay_dir),
-        api_upstream=args.api_upstream,
-        host=args.host,
-        port=args.port,
+        site_dir=site_dir,
+        overlay_dir=overlay_dir,
+        api_upstream=api_upstream,
+        host=host,
+        port=port,
     )
 
     app = create_app(config)
     uvicorn.run(app, host=config.host, port=config.port, log_level="info")
+
+
+def main() -> None:
+    app()
 
 
 if __name__ == "__main__":
