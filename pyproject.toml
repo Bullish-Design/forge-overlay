@@ -67,8 +67,16 @@ clean = "demo/scripts/clean-demo.sh"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "-q --cov=forge_overlay --cov-report=term-missing"
+addopts = "-q --cov=forge_overlay --cov-report=term-missing --cov-fail-under=90 --no-cov-on-fail"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["forge_overlay"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
 
 [tool.mypy]
 python_version = "3.13"

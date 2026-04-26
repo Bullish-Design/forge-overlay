@@ -122,3 +122,12 @@ def test_uvicorn_receives_config_values(monkeypatch) -> None:
         port=8191,
         log_level="info",
     )
+
+
+def test_main_calls_typer_app(monkeypatch) -> None:
+    app_call = MagicMock()
+    monkeypatch.setattr(main_mod, "app", app_call)
+
+    main_mod.main()
+
+    app_call.assert_called_once_with()
