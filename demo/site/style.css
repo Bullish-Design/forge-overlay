@@ -1,0 +1,16 @@
+:root {
+  --fg: #1a1a1a;
+  --bg: #fafafa;
+}
+body {
+  font-family: system-ui, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  line-height: 1.6;
+}
+a {
+  color: #2563eb;
+}
