@@ -15,6 +15,7 @@ app = typer.Typer(
     no_args_is_help=False,
 )
 
+
 @app.callback()
 def serve(
     site_dir: Annotated[

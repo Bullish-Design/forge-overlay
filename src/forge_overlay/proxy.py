@@ -19,9 +19,7 @@ HOP_BY_HOP = frozenset(
 )
 
 
-async def proxy_request(
-    request: Request, upstream: str, client: httpx.AsyncClient
-) -> StreamingResponse | Response:
+async def proxy_request(request: Request, upstream: str, client: httpx.AsyncClient) -> StreamingResponse | Response:
     """Forward a request to the upstream and stream the response back."""
     path = request.path_params.get("path", "")
     url = f"{upstream.rstrip('/')}/api/{path}"

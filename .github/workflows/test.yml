@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v27
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: devenv
+
+      - name: Install devenv
+        run: nix profile install nixpkgs#devenv
+
+      - name: Sync dependencies
+        run: devenv shell -- uv sync --all-extras
+
+      - name: Ruff check
+        run: devenv shell -- uv run ruff check src tests
+
+      - name: Ruff format check
+        run: devenv shell -- uv run ruff format --check src tests
+
+      - name: Mypy
+        run: devenv shell -- uv run mypy src/forge_overlay/
+
+      - name: Pytest
+        run: devenv shell -- uv run pytest -v
