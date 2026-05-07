@@ -42,6 +42,14 @@ def serve(
             help="Upstream URL for /api/* proxy (default: http://127.0.0.1:3000)",
         ),
     ] = "http://127.0.0.1:3000",
+    api_proxy_timeout_s: Annotated[
+        float,
+        typer.Option(
+            "--api-proxy-timeout-s",
+            envvar="FORGE_API_PROXY_TIMEOUT_S",
+            help="Timeout in seconds for upstream /api/* and /v1/* proxy calls (default: 600.0)",
+        ),
+    ] = 600.0,
     host: Annotated[
         str,
         typer.Option(
@@ -65,6 +73,7 @@ def serve(
         site_dir=site_dir,
         overlay_dir=overlay_dir,
         api_upstream=api_upstream,
+        api_proxy_timeout_s=api_proxy_timeout_s,
         host=host,
         port=port,
     )

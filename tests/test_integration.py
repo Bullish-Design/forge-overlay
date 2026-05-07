@@ -125,8 +125,10 @@ class TestAppIntegration:
             _request,
             upstream: str,
             _client: httpx.AsyncClient,
+            upstream_prefix: str = "/api",
         ) -> JSONResponse:
             assert upstream == config.api_upstream
+            assert upstream_prefix == "/api"
             return JSONResponse({"proxied": True}, status_code=200)
 
         monkeypatch.setattr("forge_overlay.app.proxy_request", fake_proxy)
@@ -135,6 +137,24 @@ class TestAppIntegration:
         resp = client.get("/api/health")
         assert resp.status_code == 200
         assert resp.json() == {"proxied": True}
+
+    def test_v1_proxy_route(self, config: Config, monkeypatch) -> None:
+        async def fake_proxy(
+            _request,
+            upstream: str,
+            _client: httpx.AsyncClient,
+            upstream_prefix: str = "/api",
+        ) -> JSONResponse:
+            assert upstream == config.api_upstream
+            assert upstream_prefix == "/v1"
+            return JSONResponse({"jobs": []}, status_code=200)
+
+        monkeypatch.setattr("forge_overlay.app.proxy_request", fake_proxy)
+        app = create_app(config)
+        client = TestClient(app)
+        resp = client.get("/v1/jobs?limit=10")
+        assert resp.status_code == 200
+        assert resp.json() == {"jobs": []}
 
     def test_demo_root_serves_vault_home(self, demo_config: Config) -> None:
         app = create_app(demo_config)

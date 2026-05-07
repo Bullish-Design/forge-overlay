@@ -35,6 +35,7 @@ def test_defaults_with_no_args_or_env(monkeypatch) -> None:
     assert config.site_dir == Path("public")
     assert config.overlay_dir == Path("overlay")
     assert config.api_upstream == "http://127.0.0.1:3000"
+    assert config.api_proxy_timeout_s == 600.0
     assert config.host == "127.0.0.1"
     assert config.port == 8080
 
@@ -45,6 +46,7 @@ def test_env_vars_override_defaults(monkeypatch) -> None:
         "FORGE_SITE_DIR": "/tmp/demo-site",
         "FORGE_OVERLAY_DIR": "/tmp/demo-overlay",
         "FORGE_API_UPSTREAM": "http://localhost:9999",
+        "FORGE_API_PROXY_TIMEOUT_S": "321.5",
         "FORGE_HOST": "0.0.0.0",
         "FORGE_PORT": "9090",
     }
@@ -57,6 +59,7 @@ def test_env_vars_override_defaults(monkeypatch) -> None:
     assert config.site_dir == Path("/tmp/demo-site")
     assert config.overlay_dir == Path("/tmp/demo-overlay")
     assert config.api_upstream == "http://localhost:9999"
+    assert config.api_proxy_timeout_s == 321.5
     assert config.host == "0.0.0.0"
     assert config.port == 9090
 
@@ -67,6 +70,7 @@ def test_cli_flags_override_env_vars(monkeypatch) -> None:
         "FORGE_SITE_DIR": "/tmp/from-env-site",
         "FORGE_OVERLAY_DIR": "/tmp/from-env-overlay",
         "FORGE_API_UPSTREAM": "http://localhost:8088",
+        "FORGE_API_PROXY_TIMEOUT_S": "777.0",
         "FORGE_HOST": "0.0.0.0",
         "FORGE_PORT": "9090",
     }
@@ -80,6 +84,8 @@ def test_cli_flags_override_env_vars(monkeypatch) -> None:
             "/tmp/from-cli-overlay",
             "--api-upstream",
             "http://localhost:7071",
+            "--api-proxy-timeout-s",
+            "42.0",
             "--host",
             "127.0.0.2",
             "--port",
@@ -94,6 +100,7 @@ def test_cli_flags_override_env_vars(monkeypatch) -> None:
     assert config.site_dir == Path("/tmp/from-cli-site")
     assert config.overlay_dir == Path("/tmp/from-cli-overlay")
     assert config.api_upstream == "http://localhost:7071"
+    assert config.api_proxy_timeout_s == 42.0
     assert config.host == "127.0.0.2"
     assert config.port == 7070
 

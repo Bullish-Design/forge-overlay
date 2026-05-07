@@ -18,11 +18,13 @@ from forge_overlay.inject import InjectMiddleware
 from forge_overlay.proxy import proxy_request
 from forge_overlay.static_handler import build_404, build_response, resolve_file
 
+_PROXY_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]
+
 
 def create_app(config: Config) -> ASGIApp:
     """Build and return the forge-overlay ASGI application."""
     broker = EventBroker()
-    http_client = httpx.AsyncClient()
+    http_client = httpx.AsyncClient(timeout=httpx.Timeout(config.api_proxy_timeout_s, connect=10.0))
 
     async def rebuild_trigger(_request: Request) -> Response:
         """POST /internal/rebuild - accept webhook from kiln-fork."""
@@ -53,7 +55,11 @@ def create_app(config: Config) -> ASGIApp:
 
     async def api_proxy(request: Request) -> Response:
         """ANY /api/{path} - reverse proxy to obsidian-agent."""
-        return await proxy_request(request, config.api_upstream, http_client)
+        return await proxy_request(request, config.api_upstream, http_client, upstream_prefix="/api")
+
+    async def v1_proxy(request: Request) -> Response:
+        """ANY /v1/{path} - reverse proxy to obsidian-agent."""
+        return await proxy_request(request, config.api_upstream, http_client, upstream_prefix="/v1")
 
     async def site_static(request: Request) -> Response:
         """GET /{path} - serve site output with clean URLs."""
@@ -78,7 +84,12 @@ def create_app(config: Config) -> ASGIApp:
         Route(
             "/api/{path:path}",
             api_proxy,
-            methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+            methods=_PROXY_METHODS,
+        ),
+        Route(
+            "/v1/{path:path}",
+            v1_proxy,
+            methods=_PROXY_METHODS,
         ),
         Route("/{path:path}", site_static),
     ]

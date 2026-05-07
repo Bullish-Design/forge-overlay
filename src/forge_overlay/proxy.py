@@ -19,10 +19,16 @@ HOP_BY_HOP = frozenset(
 )
 
 
-async def proxy_request(request: Request, upstream: str, client: httpx.AsyncClient) -> StreamingResponse | Response:
+async def proxy_request(
+    request: Request,
+    upstream: str,
+    client: httpx.AsyncClient,
+    upstream_prefix: str = "/api",
+) -> StreamingResponse | Response:
     """Forward a request to the upstream and stream the response back."""
     path = request.path_params.get("path", "")
-    url = f"{upstream.rstrip('/')}/api/{path}"
+    normalized_prefix = "/" + upstream_prefix.strip("/")
+    url = f"{upstream.rstrip('/')}{normalized_prefix}/{path}"
     if request.url.query:
         url = f"{url}?{request.url.query}"
 
@@ -37,6 +43,12 @@ async def proxy_request(request: Request, upstream: str, client: httpx.AsyncClie
             headers=headers,
             content=body,
             follow_redirects=False,
+        )
+    except httpx.TimeoutException:
+        return Response(
+            content='{"error":"upstream_timeout"}',
+            status_code=504,
+            media_type="application/json",
         )
     except httpx.HTTPError:
         return Response(

@@ -10,11 +10,19 @@ from forge_overlay.proxy import proxy_request
 
 
 def _build_app(upstream_client: httpx.AsyncClient, methods: list[str] | None = None) -> Starlette:
-    async def proxy_route(request: Request):
-        return await proxy_request(request, "http://upstream:3000", upstream_client)
+    async def api_proxy_route(request: Request):
+        return await proxy_request(request, "http://upstream:3000", upstream_client, upstream_prefix="/api")
+
+    async def v1_proxy_route(request: Request):
+        return await proxy_request(request, "http://upstream:3000", upstream_client, upstream_prefix="/v1")
 
     route_methods = methods or ["GET"]
-    return Starlette(routes=[Route("/api/{path:path}", proxy_route, methods=route_methods)])
+    return Starlette(
+        routes=[
+            Route("/api/{path:path}", api_proxy_route, methods=route_methods),
+            Route("/v1/{path:path}", v1_proxy_route, methods=route_methods),
+        ]
+    )
 
 
 class TestProxy:
@@ -66,6 +74,59 @@ class TestProxy:
         test_client = TestClient(app)
         resp = test_client.get("/api/search?q=hello")
         assert resp.status_code == 200
+
+        await client.aclose()
+
+    async def test_forwards_v1_get_with_query_string(self) -> None:
+        async def mock_handler(request: httpx.Request) -> httpx.Response:
+            assert str(request.url).startswith("http://upstream:3000/v1/jobs")
+            assert "limit=10" in str(request.url)
+            return httpx.Response(200, json={"jobs": []})
+
+        transport = httpx.MockTransport(mock_handler)
+        client = httpx.AsyncClient(transport=transport, base_url="http://upstream:3000")
+        app = _build_app(client)
+
+        test_client = TestClient(app)
+        resp = test_client.get("/v1/jobs?limit=10")
+        assert resp.status_code == 200
+        assert resp.json() == {"jobs": []}
+
+        await client.aclose()
+
+    async def test_forwards_v1_post_body(self) -> None:
+        async def mock_handler(request: httpx.Request) -> httpx.Response:
+            assert str(request.url) == "http://upstream:3000/v1/jobs"
+            return httpx.Response(
+                202,
+                content=request.content,
+                headers={"content-type": "application/json"},
+            )
+
+        transport = httpx.MockTransport(mock_handler)
+        client = httpx.AsyncClient(transport=transport, base_url="http://upstream:3000")
+        app = _build_app(client, methods=["POST"])
+
+        test_client = TestClient(app)
+        resp = test_client.post("/v1/jobs", json={"op": "apply", "payload": {"note": "x"}})
+        assert resp.status_code == 202
+        assert resp.json() == {"op": "apply", "payload": {"note": "x"}}
+
+        await client.aclose()
+
+    async def test_forwards_v1_get_by_id(self) -> None:
+        async def mock_handler(request: httpx.Request) -> httpx.Response:
+            assert str(request.url) == "http://upstream:3000/v1/jobs/job-123"
+            return httpx.Response(200, json={"job_id": "job-123", "status": "queued"})
+
+        transport = httpx.MockTransport(mock_handler)
+        client = httpx.AsyncClient(transport=transport, base_url="http://upstream:3000")
+        app = _build_app(client)
+
+        test_client = TestClient(app)
+        resp = test_client.get("/v1/jobs/job-123")
+        assert resp.status_code == 200
+        assert resp.json() == {"job_id": "job-123", "status": "queued"}
 
         await client.aclose()
 
@@ -144,7 +205,7 @@ class TestProxy:
 
         await client.aclose()
 
-    async def test_upstream_timeout_returns_502(self) -> None:
+    async def test_upstream_timeout_returns_504(self) -> None:
         async def mock_handler(request: httpx.Request) -> httpx.Response:
             raise httpx.ReadTimeout("timed out", request=request)
 
@@ -154,7 +215,7 @@ class TestProxy:
 
         test_client = TestClient(app)
         resp = test_client.get("/api/slow")
-        assert resp.status_code == 502
-        assert resp.json() == {"error": "upstream_unavailable"}
+        assert resp.status_code == 504
+        assert resp.json() == {"error": "upstream_timeout"}
 
         await client.aclose()

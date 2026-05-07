@@ -17,6 +17,9 @@ class Config:
     # Upstream URL for /api/* proxy (obsidian-agent)
     api_upstream: str = "http://127.0.0.1:3000"
 
+    # Timeout in seconds for upstream proxy calls (/api/* and /v1/*)
+    api_proxy_timeout_s: float = 600.0
+
     # Host and port for the overlay server itself
     host: str = "127.0.0.1"
     port: int = 8080
